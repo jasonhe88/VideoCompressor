@@ -3,17 +3,16 @@ package com.vincent.videocompress;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.vincent.videocompressor.VideoCompress;
 
@@ -86,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
                         pb_compress.setVisibility(View.INVISIBLE);
                         endTime = System.currentTimeMillis();
                         Util.writeFile(MainActivity.this, "End at: " + new SimpleDateFormat("HH:mm:ss", getLocale()).format(new Date()) + "\n");
-                        Util.writeFile(MainActivity.this, "Total: " + ((endTime - startTime)/1000) + "s" + "\n");
+                        Util.writeFile(MainActivity.this, "Total: " + ((endTime - startTime) / 1000) + "s" + "\n");
                         Util.writeFile(MainActivity.this);
                     }
 
@@ -149,12 +148,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @SuppressWarnings("deprecation")
-    public static Locale getSystemLocaleLegacy(Configuration config){
+    public static Locale getSystemLocaleLegacy(Configuration config) {
         return config.locale;
     }
 
     @TargetApi(Build.VERSION_CODES.N)
-    public static Locale getSystemLocale(Configuration config){
+    public static Locale getSystemLocale(Configuration config) {
         return config.getLocales().get(0);
     }
 }
