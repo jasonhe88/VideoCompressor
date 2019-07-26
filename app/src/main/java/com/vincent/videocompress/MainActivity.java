@@ -14,6 +14,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.vincent.videocompressor.CompressConfig;
 import com.vincent.videocompressor.VideoCompress;
 
 import java.io.File;
@@ -67,6 +68,58 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 String destPath = tv_output.getText().toString() + File.separator + "VID_" + new SimpleDateFormat("yyyyMMdd_HHmmss", getLocale()).format(new Date()) + ".mp4";
                 VideoCompress.compressVideoLow(tv_input.getText().toString(), destPath, new VideoCompress.CompressListener() {
+                    @Override
+                    public void onStart() {
+                        tv_indicator.setText("Compressing..." + "\n"
+                                + "Start at: " + new SimpleDateFormat("HH:mm:ss", getLocale()).format(new Date()));
+                        pb_compress.setVisibility(View.VISIBLE);
+                        startTime = System.currentTimeMillis();
+                        Util.writeFile(MainActivity.this, "Start at: " + new SimpleDateFormat("HH:mm:ss", getLocale()).format(new Date()) + "\n");
+                    }
+
+                    @Override
+                    public void onSuccess() {
+                        String previous = tv_indicator.getText().toString();
+                        tv_indicator.setText(previous + "\n"
+                                + "Compress Success!" + "\n"
+                                + "End at: " + new SimpleDateFormat("HH:mm:ss", getLocale()).format(new Date()));
+                        pb_compress.setVisibility(View.INVISIBLE);
+                        endTime = System.currentTimeMillis();
+                        Util.writeFile(MainActivity.this, "End at: " + new SimpleDateFormat("HH:mm:ss", getLocale()).format(new Date()) + "\n");
+                        Util.writeFile(MainActivity.this, "Total: " + ((endTime - startTime) / 1000) + "s" + "\n");
+                        Util.writeFile(MainActivity.this);
+                    }
+
+                    @Override
+                    public void onFail() {
+                        tv_indicator.setText("Compress Failed!");
+                        pb_compress.setVisibility(View.INVISIBLE);
+                        endTime = System.currentTimeMillis();
+                        Util.writeFile(MainActivity.this, "Failed Compress!!!" + new SimpleDateFormat("HH:mm:ss", getLocale()).format(new Date()));
+                    }
+
+                    @Override
+                    public void onProgress(float percent) {
+                        tv_progress.setText(String.valueOf(percent) + "%");
+                    }
+                });
+            }
+        });
+
+        findViewById(R.id.btn_custom).setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                String srcPath = tv_input.getText().toString();
+                String destPath = tv_output.getText().toString() + File.separator + "VID_" + new SimpleDateFormat("yyyyMMdd_HHmmss", getLocale()).format(new Date()) + ".mp4";
+                CompressConfig config = new CompressConfig
+                        .Builder()
+                        .width(1280)
+                        .height(720)
+                        .bitrate(1280 * 720 * 2)
+                        .frame(24)
+                        .build();
+                VideoCompress.compressVideoCustom(srcPath, destPath, config, new VideoCompress.CompressListener() {
                     @Override
                     public void onStart() {
                         tv_indicator.setText("Compressing..." + "\n"

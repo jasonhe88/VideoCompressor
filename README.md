@@ -1,3 +1,37 @@
+# 本分支修改内容
+
+- 迁移到AndroidX
+- 增加compressVideoCustom方法，可以配置自定义压缩参数
+    ```
+    CompressConfig config = new CompressConfig
+            .Builder()
+            .width(1280)
+            .height(720)
+            .bitrate(1280 * 720 * 2)
+            .frame(24)
+            .build();
+    VideoCompress.compressVideoCustom(srcPath, destPath, config, new VideoCompress.CompressListener() {
+        ...
+    })
+    ```
+# 本分支集成方式
+
+Step 1. Add the JitPack repository to your build file
+Add it in your root build.gradle at the end of repositories:
+
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://www.jitpack.io' }
+		}
+	}
+Step 2. Add the dependency [![](https://jitpack.io/v/qqnp1100/VideoCompressor.svg)](https://jitpack.io/#qqnp1100/VideoCompressor)
+
+	dependencies {
+            //请自行改为最新版本
+	        implementation 'com.github.qqnp1100:VideoCompressor:0.0.1'
+	}
+
 # VideoCompressor
 A High-performance video compressor for Android using Hardware decoding and encoding API(MediaCodec).
 

@@ -26,6 +26,7 @@ public class VideoController {
     static final int COMPRESS_QUALITY_HIGH = 1;
     static final int COMPRESS_QUALITY_MEDIUM = 2;
     static final int COMPRESS_QUALITY_LOW = 3;
+    static final int COMPRESS_QUALITY_CUSTOM = 4;
 
     public static File cachedFile;
     public String path;
@@ -123,7 +124,7 @@ public class VideoController {
 
         @Override
         public void run() {
-            VideoController.getInstance().convertVideo(videoPath, destPath, 0, null);
+            VideoController.getInstance().convertVideo(videoPath, destPath, 0, null, null);
         }
     }
 
@@ -152,11 +153,12 @@ public class VideoController {
 
     /**
      * Background conversion for queueing tasks
+     *
      * @param path source file to compress
      * @param dest destination directory to put result
      */
 
-public void scheduleVideoConvert(String path, String dest) {
+    public void scheduleVideoConvert(String path, String dest) {
         startVideoConvertFromQueue(path, dest);
     }
 
@@ -242,13 +244,17 @@ public void scheduleVideoConvert(String path, String dest) {
 
     /**
      * Perform the actual video compression. Processes the frames and does the magic
-     * @param sourcePath the source uri for the file as per
+     *
+     * @param sourcePath      the source uri for the file as per
      * @param destinationPath the destination directory where compressed video is eventually saved
      * @return
      */
     @TargetApi(16)
-    public boolean  convertVideo(final String sourcePath, String destinationPath, int quality, CompressProgressListener listener) {
-        this.path=sourcePath;
+    public boolean convertVideo(final String sourcePath, String destinationPath, int quality, CompressConfig config, CompressProgressListener listener) {
+        if (quality == COMPRESS_QUALITY_CUSTOM && config == null) {
+            throw new RuntimeException("CompressConfig 不能为空!");
+        }
+        this.path = sourcePath;
 
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(path);
@@ -267,6 +273,8 @@ public void scheduleVideoConvert(String path, String dest) {
         int resultWidth;
         int resultHeight;
         int bitrate;
+        int frame = 25;
+        int interval = 10;
         switch (quality) {
             default:
             case COMPRESS_QUALITY_HIGH:
@@ -282,7 +290,14 @@ public void scheduleVideoConvert(String path, String dest) {
             case COMPRESS_QUALITY_LOW:
                 resultWidth = originalWidth / 2;
                 resultHeight = originalHeight / 2;
-                bitrate = (resultWidth/2) * (resultHeight/2) * 10;
+                bitrate = (resultWidth / 2) * (resultHeight / 2) * 10;
+                break;
+            case COMPRESS_QUALITY_CUSTOM:
+                resultWidth = config.width;
+                resultHeight = config.height;
+                bitrate = config.bitrate;
+                frame = config.frame;
+                interval = config.interval;
                 break;
         }
 
@@ -434,8 +449,8 @@ public void scheduleVideoConvert(String path, String dest) {
                             MediaFormat outputFormat = MediaFormat.createVideoFormat(MIME_TYPE, resultWidth, resultHeight);
                             outputFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat);
                             outputFormat.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
-                            outputFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 25);
-                            outputFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 10);
+                            outputFormat.setInteger(MediaFormat.KEY_FRAME_RATE, frame);
+                            outputFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, interval);
                             if (Build.VERSION.SDK_INT < 18) {
                                 outputFormat.setInteger("stride", resultWidth + 32);
                                 outputFormat.setInteger("slice-height", resultHeight);
@@ -710,7 +725,7 @@ public void scheduleVideoConvert(String path, String dest) {
         }
         didWriteData(true, error);
 
-        cachedFile=cacheFile;
+        cachedFile = cacheFile;
 
        /* File fdelete = inputFile;
         if (fdelete.exists()) {
@@ -722,9 +737,9 @@ public void scheduleVideoConvert(String path, String dest) {
         }*/
 
         //inputFile.delete();
-        Log.e("ViratPath",path+"");
-        Log.e("ViratPath",cacheFile.getPath()+"");
-        Log.e("ViratPath",inputFile.getPath()+"");
+        Log.e("ViratPath", path + "");
+        Log.e("ViratPath", cacheFile.getPath() + "");
+        Log.e("ViratPath", inputFile.getPath() + "");
 
 
        /* Log.e("ViratPath",path+"");
@@ -750,7 +765,7 @@ public void scheduleVideoConvert(String path, String dest) {
         }
 */
 
-    //    cacheFile.delete();
+        //    cacheFile.delete();
 
        /* try {
            // copyFile(cacheFile,inputFile);
@@ -759,21 +774,17 @@ public void scheduleVideoConvert(String path, String dest) {
         } catch (IOException e) {
             e.printStackTrace();
         }*/
-         // cacheFile.delete();
-       // inputFile.delete();
+        // cacheFile.delete();
+        // inputFile.delete();
         return true;
     }
 
-    public static void copyFile(File src, File dst) throws IOException
-    {
+    public static void copyFile(File src, File dst) throws IOException {
         FileChannel inChannel = new FileInputStream(src).getChannel();
         FileChannel outChannel = new FileOutputStream(dst).getChannel();
-        try
-        {
+        try {
             inChannel.transferTo(1, inChannel.size(), outChannel);
-        }
-        finally
-        {
+        } finally {
             if (inChannel != null)
                 inChannel.close();
             if (outChannel != null)

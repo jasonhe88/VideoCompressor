@@ -24,7 +24,13 @@ public class VideoCompress {
     }
 
     public static VideoCompressTask compressVideoLow(String srcPath, String destPath, CompressListener listener) {
-        VideoCompressTask task =  new VideoCompressTask(listener, VideoController.COMPRESS_QUALITY_LOW);
+        VideoCompressTask task = new VideoCompressTask(listener, VideoController.COMPRESS_QUALITY_LOW);
+        task.execute(srcPath, destPath);
+        return task;
+    }
+
+    public static VideoCompressTask compressVideoCustom(String srcPath, String destPath, CompressConfig config, CompressListener listener) {
+        VideoCompressTask task = new VideoCompressTask(listener, VideoController.COMPRESS_QUALITY_CUSTOM, config);
         task.execute(srcPath, destPath);
         return task;
     }
@@ -32,10 +38,17 @@ public class VideoCompress {
     private static class VideoCompressTask extends AsyncTask<String, Float, Boolean> {
         private CompressListener mListener;
         private int mQuality;
+        private CompressConfig mConfig;
 
         public VideoCompressTask(CompressListener listener, int quality) {
             mListener = listener;
             mQuality = quality;
+        }
+
+        public VideoCompressTask(CompressListener listener, int quality, CompressConfig config) {
+            mListener = listener;
+            mQuality = quality;
+            mConfig = config;
         }
 
         @Override
@@ -48,7 +61,7 @@ public class VideoCompress {
 
         @Override
         protected Boolean doInBackground(String... paths) {
-            return VideoController.getInstance().convertVideo(paths[0], paths[1], mQuality, new VideoController.CompressProgressListener() {
+            return VideoController.getInstance().convertVideo(paths[0], paths[1], mQuality, mConfig, new VideoController.CompressProgressListener() {
                 @Override
                 public void onProgress(float percent) {
                     publishProgress(percent);
@@ -79,8 +92,11 @@ public class VideoCompress {
 
     public interface CompressListener {
         void onStart();
+
         void onSuccess();
+
         void onFail();
+
         void onProgress(float percent);
     }
 }
