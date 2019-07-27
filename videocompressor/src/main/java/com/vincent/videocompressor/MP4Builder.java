@@ -4,31 +4,30 @@ import android.annotation.TargetApi;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 
-import com.coremedia.iso.BoxParser;
-import com.coremedia.iso.IsoFile;
-import com.coremedia.iso.IsoTypeWriter;
-import com.coremedia.iso.boxes.Box;
-import com.coremedia.iso.boxes.Container;
-import com.coremedia.iso.boxes.DataEntryUrlBox;
-import com.coremedia.iso.boxes.DataInformationBox;
-import com.coremedia.iso.boxes.DataReferenceBox;
-import com.coremedia.iso.boxes.FileTypeBox;
-import com.coremedia.iso.boxes.HandlerBox;
-import com.coremedia.iso.boxes.MediaBox;
-import com.coremedia.iso.boxes.MediaHeaderBox;
-import com.coremedia.iso.boxes.MediaInformationBox;
-import com.coremedia.iso.boxes.MovieBox;
-import com.coremedia.iso.boxes.MovieHeaderBox;
-import com.coremedia.iso.boxes.SampleSizeBox;
-import com.coremedia.iso.boxes.SampleTableBox;
-import com.coremedia.iso.boxes.SampleToChunkBox;
-import com.coremedia.iso.boxes.StaticChunkOffsetBox;
-import com.coremedia.iso.boxes.SyncSampleBox;
-import com.coremedia.iso.boxes.TimeToSampleBox;
-import com.coremedia.iso.boxes.TrackBox;
-import com.coremedia.iso.boxes.TrackHeaderBox;
-import com.googlecode.mp4parser.DataSource;
-import com.googlecode.mp4parser.util.Matrix;
+import org.mp4parser.Box;
+import org.mp4parser.BoxParser;
+import org.mp4parser.Container;
+import org.mp4parser.IsoFile;
+import org.mp4parser.boxes.iso14496.part12.DataEntryUrlBox;
+import org.mp4parser.boxes.iso14496.part12.DataInformationBox;
+import org.mp4parser.boxes.iso14496.part12.DataReferenceBox;
+import org.mp4parser.boxes.iso14496.part12.FileTypeBox;
+import org.mp4parser.boxes.iso14496.part12.HandlerBox;
+import org.mp4parser.boxes.iso14496.part12.MediaBox;
+import org.mp4parser.boxes.iso14496.part12.MediaHeaderBox;
+import org.mp4parser.boxes.iso14496.part12.MediaInformationBox;
+import org.mp4parser.boxes.iso14496.part12.MovieBox;
+import org.mp4parser.boxes.iso14496.part12.MovieHeaderBox;
+import org.mp4parser.boxes.iso14496.part12.SampleSizeBox;
+import org.mp4parser.boxes.iso14496.part12.SampleTableBox;
+import org.mp4parser.boxes.iso14496.part12.SampleToChunkBox;
+import org.mp4parser.boxes.iso14496.part12.StaticChunkOffsetBox;
+import org.mp4parser.boxes.iso14496.part12.SyncSampleBox;
+import org.mp4parser.boxes.iso14496.part12.TimeToSampleBox;
+import org.mp4parser.boxes.iso14496.part12.TrackBox;
+import org.mp4parser.boxes.iso14496.part12.TrackHeaderBox;
+import org.mp4parser.support.Matrix;
+import org.mp4parser.tools.IsoTypeWriter;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,6 +39,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.sql.DataSource;
 
 @TargetApi(16)
 public class MP4Builder {
@@ -194,11 +195,6 @@ public class MP4Builder {
 
         private boolean isSmallBox(long contentSize) {
             return (contentSize + 8) < 4294967296L;
-        }
-
-        @Override
-        public void parse(DataSource dataSource, ByteBuffer header, long contentSize, BoxParser boxParser) throws IOException {
-
         }
 
         public void getBox(WritableByteChannel writableByteChannel) throws IOException {

@@ -4,18 +4,18 @@ import android.annotation.TargetApi;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 
-import com.coremedia.iso.boxes.AbstractMediaHeaderBox;
-import com.coremedia.iso.boxes.SampleDescriptionBox;
-import com.coremedia.iso.boxes.SoundMediaHeaderBox;
-import com.coremedia.iso.boxes.VideoMediaHeaderBox;
-import com.coremedia.iso.boxes.sampleentry.AudioSampleEntry;
-import com.coremedia.iso.boxes.sampleentry.VisualSampleEntry;
-import com.googlecode.mp4parser.boxes.mp4.ESDescriptorBox;
-import com.googlecode.mp4parser.boxes.mp4.objectdescriptors.AudioSpecificConfig;
-import com.googlecode.mp4parser.boxes.mp4.objectdescriptors.DecoderConfigDescriptor;
-import com.googlecode.mp4parser.boxes.mp4.objectdescriptors.ESDescriptor;
-import com.googlecode.mp4parser.boxes.mp4.objectdescriptors.SLConfigDescriptor;
-import com.mp4parser.iso14496.part15.AvcConfigurationBox;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.AudioSpecificConfig;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.DecoderConfigDescriptor;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.ESDescriptor;
+import org.mp4parser.boxes.iso14496.part1.objectdescriptors.SLConfigDescriptor;
+import org.mp4parser.boxes.iso14496.part12.AbstractMediaHeaderBox;
+import org.mp4parser.boxes.iso14496.part12.SampleDescriptionBox;
+import org.mp4parser.boxes.iso14496.part12.SoundMediaHeaderBox;
+import org.mp4parser.boxes.iso14496.part12.VideoMediaHeaderBox;
+import org.mp4parser.boxes.iso14496.part14.ESDescriptorBox;
+import org.mp4parser.boxes.iso14496.part15.AvcConfigurationBox;
+import org.mp4parser.boxes.sampleentry.AudioSampleEntry;
+import org.mp4parser.boxes.sampleentry.VisualSampleEntry;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -62,7 +62,7 @@ public class Track {
     public Track(int id, MediaFormat format, boolean isAudio) throws Exception {
         trackId = id;
         if (!isAudio) {
-            sampleDurations.add((long)3015);
+            sampleDurations.add((long) 3015);
             duration = 3015;
             width = format.getInteger(MediaFormat.KEY_WIDTH);
             height = format.getInteger(MediaFormat.KEY_HEIGHT);
@@ -85,18 +85,22 @@ public class Track {
                 AvcConfigurationBox avcConfigurationBox = new AvcConfigurationBox();
 
                 if (format.getByteBuffer("csd-0") != null) {
-                    ArrayList<byte[]> spsArray = new ArrayList<byte[]>();
+                    ArrayList<ByteBuffer> spsArray = new ArrayList();
                     ByteBuffer spsBuff = format.getByteBuffer("csd-0");
                     spsBuff.position(4);
-                    byte[] spsBytes = new byte[spsBuff.remaining()];
-                    spsBuff.get(spsBytes);
+                    ByteBuffer spsBytes = ByteBuffer.allocate(spsBuff.remaining());
+                    byte[] temp1 = new byte[spsBuff.remaining()];
+                    spsBuff.get(temp1);
+                    spsBytes.put(temp1);
                     spsArray.add(spsBytes);
 
-                    ArrayList<byte[]> ppsArray = new ArrayList<byte[]>();
+                    ArrayList<ByteBuffer> ppsArray = new ArrayList<>();
                     ByteBuffer ppsBuff = format.getByteBuffer("csd-1");
                     ppsBuff.position(4);
-                    byte[] ppsBytes = new byte[ppsBuff.remaining()];
-                    ppsBuff.get(ppsBytes);
+                    ByteBuffer ppsBytes = ByteBuffer.allocate(ppsBuff.remaining());
+                    byte[] temp2 = new byte[ppsBuff.remaining()];
+                    ppsBuff.get(temp2);
+                    ppsBytes.put(temp2);
                     ppsArray.add(ppsBytes);
                     avcConfigurationBox.setSequenceParameterSets(spsArray);
                     avcConfigurationBox.setPictureParameterSets(ppsArray);
@@ -128,7 +132,7 @@ public class Track {
                 sampleDescriptionBox.addBox(visualSampleEntry);
             }
         } else {
-            sampleDurations.add((long)1024);
+            sampleDurations.add((long) 1024);
             duration = 1024;
             isAudio = true;
             volume = 1;
@@ -159,7 +163,7 @@ public class Track {
 
             AudioSpecificConfig audioSpecificConfig = new AudioSpecificConfig();
             audioSpecificConfig.setAudioObjectType(2);
-            audioSpecificConfig.setSamplingFrequencyIndex(samplingFrequencyIndexMap.get((int)audioSampleEntry.getSampleRate()));
+            audioSpecificConfig.setSamplingFrequencyIndex(samplingFrequencyIndexMap.get((int) audioSampleEntry.getSampleRate()));
             audioSpecificConfig.setChannelConfiguration(audioSampleEntry.getChannelCount());
             decoderConfigDescriptor.setAudioSpecificInfo(audioSpecificConfig);
 

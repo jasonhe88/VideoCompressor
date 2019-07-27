@@ -477,6 +477,7 @@ public class VideoController {
                             outputFormat.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
                             outputFormat.setInteger(MediaFormat.KEY_FRAME_RATE, frame);
                             outputFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, interval);
+
                             if (Build.VERSION.SDK_INT < 18) {
                                 outputFormat.setInteger("stride", resultWidth + 32);
                                 outputFormat.setInteger("slice-height", resultHeight);

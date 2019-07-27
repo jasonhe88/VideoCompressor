@@ -117,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
                     .height(720)
                     .bitrate(1280 * 720 * 2)
                     .frame(24)
+                    .interval(2)
                     .build();
             VideoCompress.compressVideoCustom(srcPath, destPath, config, new VideoCompress.CompressListener() {
                 @Override
