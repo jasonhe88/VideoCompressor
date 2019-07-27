@@ -24,12 +24,12 @@ public class CompressConfig {
 
     public static class Builder {
 
-        int videoWidth = 0;//原视频宽度
-        int videoHeight = 0;//原视频高度
-        int videoBitrate = 0;//原视频比特率
-        int videoFrame = 0;//原视频帧
-        int videoRotation = 0;//原视频方向
-        long videoDuration = 0L;//原视频时长
+        public int videoWidth = 0;//原视频宽度
+        public int videoHeight = 0;//原视频高度
+        public int videoBitrate = 0;//原视频比特率
+        public int videoFrame = 0;//原视频帧
+        public int videoRotation = 0;//原视频方向
+        public long videoDuration = 0L;//原视频时长
 
         private int width = 0;//压缩宽度
         private int height = 0;//压缩高度
