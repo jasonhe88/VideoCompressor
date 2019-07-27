@@ -17,12 +17,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 @SuppressLint("NewApi")
 public class VideoController {
+    static final String ERROR_CANCEL = "canceled conversion";
+
+    static final int COMPRESS_TYPE_SUCCESS = 0;
+    static final int COMPRESS_TYPE_CANCEL = 1;
+    static final int COMPRESS_TYPE_FAIL = 2;
+
     static final int COMPRESS_QUALITY_HIGH = 1;
     static final int COMPRESS_QUALITY_MEDIUM = 2;
     static final int COMPRESS_QUALITY_LOW = 3;
@@ -40,6 +43,8 @@ public class VideoController {
     private final static int PROCESSOR_TYPE_TI = 5;
     private static volatile VideoController Instance = null;
     private boolean videoConvertFirstWrite = true;
+    private final Object videoConvertSync = new Object();
+    private boolean cancelCurrentVideoConversion = false;
 
     interface CompressProgressListener {
         void onProgress(float percent);
@@ -242,6 +247,23 @@ public class VideoController {
         return -5;
     }
 
+    private void checkConversionCanceled() {
+        boolean cancelConversion;
+        synchronized (videoConvertSync) {
+            cancelConversion = cancelCurrentVideoConversion;
+        }
+        if (cancelConversion) {
+            throw new RuntimeException(ERROR_CANCEL);
+        }
+    }
+
+    public void cancelVideoConvert() {
+        synchronized (videoConvertSync) {
+            cancelCurrentVideoConversion = true;
+        }
+    }
+
+
     /**
      * Perform the actual video compression. Processes the frames and does the magic
      *
@@ -250,7 +272,10 @@ public class VideoController {
      * @return
      */
     @TargetApi(16)
-    public boolean convertVideo(final String sourcePath, String destinationPath, int quality, CompressConfig config, CompressProgressListener listener) {
+    public int convertVideo(final String sourcePath, String destinationPath, int quality, CompressConfig config, CompressProgressListener listener) {
+        synchronized (videoConvertSync) {
+            cancelCurrentVideoConversion = false;
+        }
         if (quality == COMPRESS_QUALITY_CUSTOM && config == null) {
             throw new RuntimeException("CompressConfig 不能为空!");
         }
@@ -334,7 +359,7 @@ public class VideoController {
         File inputFile = new File(path);
         if (!inputFile.canRead()) {
             didWriteData(true, true);
-            return false;
+            return COMPRESS_TYPE_FAIL;
         }
 
         videoConvertFirstWrite = true;
@@ -342,6 +367,7 @@ public class VideoController {
         long videoStartTime = startTime;
 
         long time = System.currentTimeMillis();
+        boolean cancel = false;
 
         if (resultWidth != 0 && resultHeight != 0) {
             MP4Builder mediaMuxer = null;
@@ -484,8 +510,9 @@ public class VideoController {
                                     encoderInputBuffers = encoder.getInputBuffers();
                                 }
                             }
-
+                            checkConversionCanceled();
                             while (!outputDone) {
+                                checkConversionCanceled();
                                 if (!inputDone) {
                                     boolean eof = false;
                                     int index = extractor.getSampleTrackIndex();
@@ -522,6 +549,7 @@ public class VideoController {
                                 boolean decoderOutputAvailable = !decoderDone;
                                 boolean encoderOutputAvailable = true;
                                 while (decoderOutputAvailable || encoderOutputAvailable) {
+                                    checkConversionCanceled();
                                     int encoderStatus = encoder.dequeueOutputBuffer(info, TIMEOUT_USEC);
                                     if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
                                         encoderOutputAvailable = false;
@@ -693,6 +721,7 @@ public class VideoController {
                             encoder.stop();
                             encoder.release();
                         }
+                        checkConversionCanceled();
                     }
                 } else {
                     long videoTime = readAndWriteTrack(extractor, mediaMuxer, info, startTime, endTime, cacheFile, false);
@@ -705,6 +734,9 @@ public class VideoController {
                 }
             } catch (Exception e) {
                 error = true;
+                if (ERROR_CANCEL.equals(e.getMessage())) {
+                    cancel = true;
+                }
                 Log.e("tmessages", e.getMessage());
             } finally {
                 if (extractor != null) {
@@ -721,7 +753,7 @@ public class VideoController {
             }
         } else {
             didWriteData(true, true);
-            return false;
+            return COMPRESS_TYPE_FAIL;
         }
         didWriteData(true, error);
 
@@ -776,7 +808,12 @@ public class VideoController {
         }*/
         // cacheFile.delete();
         // inputFile.delete();
-        return true;
+        if (cancel) {
+            cachedFile.delete();
+            return COMPRESS_TYPE_CANCEL;
+        } else {
+            return COMPRESS_TYPE_SUCCESS;
+        }
     }
 
     public static void copyFile(File src, File dst) throws IOException {

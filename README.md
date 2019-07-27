@@ -14,6 +14,10 @@
         ...
     })
     ```
+- 增加取消压缩方法
+    ```
+    VideoCompress.compressCancel();
+    ```
 # 本分支集成方式
 
 Step 1. Add the JitPack repository to your build file

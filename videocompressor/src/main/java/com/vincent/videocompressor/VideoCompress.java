@@ -35,7 +35,11 @@ public class VideoCompress {
         return task;
     }
 
-    private static class VideoCompressTask extends AsyncTask<String, Float, Boolean> {
+    public static void compressCancel() {
+        VideoController.getInstance().cancelVideoConvert();
+    }
+
+    private static class VideoCompressTask extends AsyncTask<String, Float, Integer> {
         private CompressListener mListener;
         private int mQuality;
         private CompressConfig mConfig;
@@ -60,13 +64,8 @@ public class VideoCompress {
         }
 
         @Override
-        protected Boolean doInBackground(String... paths) {
-            return VideoController.getInstance().convertVideo(paths[0], paths[1], mQuality, mConfig, new VideoController.CompressProgressListener() {
-                @Override
-                public void onProgress(float percent) {
-                    publishProgress(percent);
-                }
-            });
+        protected Integer doInBackground(String... paths) {
+            return VideoController.getInstance().convertVideo(paths[0], paths[1], mQuality, mConfig, percent -> publishProgress(percent));
         }
 
         @Override
@@ -78,13 +77,19 @@ public class VideoCompress {
         }
 
         @Override
-        protected void onPostExecute(Boolean result) {
+        protected void onPostExecute(Integer result) {
             super.onPostExecute(result);
             if (mListener != null) {
-                if (result) {
-                    mListener.onSuccess();
-                } else {
-                    mListener.onFail();
+                switch (result) {
+                    case VideoController.COMPRESS_TYPE_CANCEL:
+                        mListener.onCancel();
+                        break;
+                    case VideoController.COMPRESS_TYPE_SUCCESS:
+                        mListener.onSuccess();
+                        break;
+                    case VideoController.COMPRESS_TYPE_FAIL:
+                        mListener.onFail();
+                        break;
                 }
             }
         }
@@ -94,6 +99,8 @@ public class VideoCompress {
         void onStart();
 
         void onSuccess();
+
+        void onCancel();
 
         void onFail();
 
