@@ -323,6 +323,8 @@ public class VideoController {
                 bitrate = config.bitrate;
                 frame = config.frame;
                 interval = config.interval;
+                startTime = config.startTime;
+                endTime = config.endTime;
                 break;
         }
 
