@@ -13,13 +13,15 @@ public class CompressConfig {
     int bitrate = 0;//比特率
     int frame = 24;//帧
     int interval = 10;//关键帧
+    int duration = 0; // 截取的时长，为零则不截取, 单位为毫秒
 
-    public CompressConfig(int width, int height, int bitrate, int frame, int interval) {
+    public CompressConfig(int width, int height, int bitrate, int frame, int interval, int duration) {
         this.width = width;
         this.height = height;
         this.bitrate = bitrate;
         this.frame = frame;
         this.interval = interval;
+        this.duration = duration;
     }
 
     public static class Builder {
@@ -36,6 +38,7 @@ public class CompressConfig {
         private int bitrate = 0;//比特率
         private int frame = 0;//帧
         private int interval = 10;//关键帧
+        private int duration = 0;
 
         /**
          * 读取视频信息，未做权限判断
@@ -86,9 +89,14 @@ public class CompressConfig {
             return this;
         }
 
+        public Builder duration(int duration) {
+            if(duration>0 && duration < videoDuration) this.duration = duration;
+            return this;
+        }
+
 
         public CompressConfig build() {
-            return new CompressConfig(width, height, bitrate, frame, interval);
+            return new CompressConfig(width, height, bitrate, frame, interval, duration);
         }
 
         @Override
